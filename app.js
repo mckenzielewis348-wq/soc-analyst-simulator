@@ -1,6 +1,6 @@
-// Complete Alert Dataset (Stages 1 through 6)
+// Complete Alert Dataset (Stages 1 through 7)
 const alerts = [
-  // Stage 2 & 3: Endpoint & Network
+  // Core Infrastructure Alerts
   {
     id: 'ALT-1001',
     title: 'Suspicious PowerShell Execution',
@@ -19,7 +19,7 @@ const alerts = [
     explanation: "High Risk: Encoded PowerShell command pulling down external payloads bypasses default system policy."
   },
 
-  // Stage 4: Phishing Scenarios
+  // Phishing Scenarios
   {
     id: 'ALT-2001',
     title: 'Phishing: Spoofed Executive Credential Harvest',
@@ -40,7 +40,7 @@ const alerts = [
     explanation: "High Risk: Spoofed executive address targeting credentials via external domain with failing SPF/DKIM checks."
   },
 
-  // Stage 5: Malware Incidents
+  // Malware Scenarios
   {
     id: 'ALT-3001',
     title: 'Malware: Rapid File Encryption (Ransomware)',
@@ -57,10 +57,10 @@ const alerts = [
       ModifiedExtensions: [".locked", ".crypto"],
       ShadowCopyDeletionAttempt: "vssadmin.exe Delete Shadows /All /Quiet"
     },
-    explanation: "High Risk: Ransomware pattern executing from a temp directory and rapidly encrypting user files. Requires immediate host isolation."
+    explanation: "High Risk: Ransomware pattern executing from a temp directory and rapidly encrypting user files."
   },
 
-  // Stage 6: Cloud Security Incidents
+  // Cloud Security Scenarios
   {
     id: 'ALT-4001',
     title: 'Cloud: Leaked AWS IAM Access Key Usage',
@@ -73,48 +73,31 @@ const alerts = [
     logs: {
       EventSource: "cloudtrail.amazonaws.com",
       EventName: "CreateUser",
-      UserAgent: "aws-cli/2.11.0 Python/3.11.2 Linux/5.15",
       AccessKeyId: "AKIAIOSFODNN7EXAMPLE",
       SourceLocation: "Frankfurt, DE (Unrecognized Location)",
       PolicyModified: "AdministratorAccess attached to new backdoor account"
     },
-    explanation: "High Risk: A leaked AWS access key was used from an unusual international location to create a new admin user account. Revoke key immediately."
+    explanation: "High Risk: A leaked AWS access key was used from an unusual location to create a backdoor admin account."
   },
+
+  // Stage 7: FINAL BOSS ATTACK — Advanced Persistent Threat (APT)
   {
-    id: 'ALT-4002',
-    title: 'Cloud: S3 Storage Bucket Made Publicly Accessible',
-    type: 'cloud',
-    severity: 'medium',
-    timestamp: '2026-09-03 11:50:30 UTC',
-    sourceIp: '10.0.1.50',
-    username: 'd.chen (DevOps)',
-    correctAction: 'remediate',
-    logs: {
-      EventSource: "s3.amazonaws.com",
-      EventName: "PutBucketAcl",
-      BucketName: "company-customer-backups-prod",
-      CannedACL: "public-read",
-      BlockPublicAccessStatus: "DISABLED"
-    },
-    explanation: "Medium Risk: A sensitive production backup bucket was reconfigured to allow public reads. Re-enable Public Access Block and restore private ACLs."
-  },
-  {
-    id: 'ALT-4003',
-    title: 'Cloud: Entra ID Impossible Travel Anomaly',
-    type: 'cloud',
+    id: 'ALT-9001',
+    title: '🚨 CRITICAL: Web Server Webshell & Database Exfiltration',
+    type: 'apt_attack',
     severity: 'high',
-    timestamp: '2026-09-03 11:55:00 UTC',
-    sourceIp: '185.220.101.9',
-    username: 's.jenkins@company.com',
+    timestamp: '2026-09-03 12:00:00 UTC',
+    sourceIp: '45.154.255.87',
+    username: 'www-data (IIS AppPool)',
     correctAction: 'escalate',
     logs: {
-      IdentityProvider: "Microsoft Entra ID",
-      Login1: "11:40 UTC — New York, US (IP: 72.14.201.2)",
-      Login2: "11:55 UTC — Bucharest, RO (IP: 185.220.101.9)",
-      TimeDifference: "15 minutes",
-      MFA_Status: "Prompted (Session Hijacked via AitM)"
+      AttackPhase: "Exfiltration / Privilege Escalation (MITRE ATT&CK TA0010)",
+      WebLog: "POST /uploads/cmd.aspx?cmd=mysqldump+-u+root+-p+customers+>+exfil.sql",
+      OutboundConnection: "45.154.255.87:443 (Transfer size: 4.8 GB)",
+      DetectedWebshell: "C:\\inetpub\\wwwroot\\uploads\\cmd.aspx",
+      SystemAlert: "Unscheduled massive database dump detected from DMZ web host"
     },
-    explanation: "High Risk: Logins registered from two geographically distant countries within 15 minutes indicate adversary-in-the-middle session hijacking. Revoke tokens and enforce password reset."
+    explanation: "🚨 BOSS INCIDENT: Full web application compromise! Attacker uploaded a webshell (cmd.aspx), dumped the production database, and exfiltrated 4.8 GB of sensitive customer data to a Command & Control IP. Escalate to Incident Response Team instantly!"
   }
 ];
 
@@ -124,6 +107,7 @@ let correctCount = 0;
 
 function init() {
   renderAlertQueue();
+  updateRankUI();
 }
 
 function renderAlertQueue() {
@@ -155,7 +139,7 @@ function selectAlert(alert, cardEl) {
     <p><strong>Category:</strong> <code>${alert.type.toUpperCase()}</code></p>
     <p><strong>Target/User:</strong> <code>${alert.username}</code></p>
     <p><strong>Source IP:</strong> <code>${alert.sourceIp}</code></p>
-    <h4>Raw Cloud Trail / Audit Logs</h4>
+    <h4>Raw SIEM / Incident Audit Logs</h4>
     <div class="log-box">${JSON.stringify(alert.logs, null, 2)}</div>
   `;
 
@@ -185,6 +169,30 @@ function makeDecision(action) {
   document.getElementById('closed-count').innerText = closedCount;
   const accuracy = Math.round((correctCount / closedCount) * 100);
   document.getElementById('accuracy').innerText = `${accuracy}%`;
+
+  updateRankUI();
+}
+
+// Stage 8: Analyst Scoring & Ranking Engine
+function updateRankUI() {
+  let rank = "Tier 1 Junior Analyst";
+  const accuracy = closedCount > 0 ? Math.round((correctCount / closedCount) * 100) : 100;
+
+  if (closedCount >= 5 && accuracy >= 80) {
+    rank = "🏆 Principal SOC Lead";
+  } else if (closedCount >= 3 && accuracy >= 60) {
+    rank = "🛡️ Tier 2 Incident Responder";
+  } else if (closedCount >= 1) {
+    rank = "🔍 Tier 1 Analyst";
+  }
+
+  let metricsEl = document.getElementById('metrics');
+  let rankSpan = document.getElementById('analyst-rank');
+  if (!rankSpan) {
+    metricsEl.insertAdjacentHTML('beforeend', ` <span>Rank: <strong id="analyst-rank" style="color:#00f2fe">${rank}</strong></span>`);
+  } else {
+    rankSpan.innerText = rank;
+  }
 }
 
 window.onload = init;
