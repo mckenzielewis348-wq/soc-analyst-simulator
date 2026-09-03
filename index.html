@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOC Analyst Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🛡️ SOC Analyst Simulator — Triage Console</h1>
+    <div id="metrics">
+      <span>Tickets Handled: <strong id="closed-count">0</strong></span>
+      <span>Accuracy: <strong id="accuracy">100%</strong></span>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <!-- Alert Queue -->
+    <section class="panel queue-panel">
+      <h2>Incoming Alerts</h2>
+      <div id="alert-list"></div>
+    </section>
+
+    <!-- Incident Detail & Log Viewer -->
+    <section class="panel detail-panel">
+      <h2>Alert Investigation</h2>
+      <div id="alert-detail">
+        <p class="placeholder">Select an alert from the queue to inspect raw logs and triage.</p>
+      </div>
+    </section>
+
+    <!-- Action Panel -->
+    <section class="panel action-panel">
+      <h2>Triage Decision</h2>
+      <div id="action-buttons">
+        <button class="btn btn-dismiss" onclick="makeDecision('dismiss')">Dismiss (False Positive)</button>
+        <button class="btn btn-remediate" onclick="makeDecision('remediate')">Remediate (Low Risk)</button>
+        <button class="btn btn-escalate" onclick="makeDecision('escalate')">Escalate Incident (High Risk)</button>
+      </div>
+      <div id="feedback" class="feedback-box"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
