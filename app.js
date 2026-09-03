@@ -1,6 +1,6 @@
-// Complete Alert Dataset (Stages 1 through 5)
+// Complete Alert Dataset (Stages 1 through 6)
 const alerts = [
-  // Stage 2 & 3: Core Infrastructure
+  // Stage 2 & 3: Endpoint & Network
   {
     id: 'ALT-1001',
     title: 'Suspicious PowerShell Execution',
@@ -43,7 +43,7 @@ const alerts = [
   // Stage 5: Malware Incidents
   {
     id: 'ALT-3001',
-    title: 'Malware: Rapid File Encryption (Ransomware Behavior)',
+    title: 'Malware: Rapid File Encryption (Ransomware)',
     type: 'malware',
     severity: 'high',
     timestamp: '2026-09-03 11:30:15 UTC',
@@ -55,47 +55,66 @@ const alerts = [
       Path: "C:\\Users\\r.vance\\AppData\\Local\\Temp\\svchost_update.exe",
       FileModificationsCount: 1420,
       ModifiedExtensions: [".locked", ".crypto"],
-      ShadowCopyDeletionAttempt: "vssadmin.exe Delete Shadows /All /Quiet",
-      EDR_Status: "Alert Only"
+      ShadowCopyDeletionAttempt: "vssadmin.exe Delete Shadows /All /Quiet"
     },
-    explanation: "High Risk: Ransomware pattern executing from a temp directory, wiping shadow copies, and rapidly encrypting user files. Immediate host isolation and incident escalation required."
+    explanation: "High Risk: Ransomware pattern executing from a temp directory and rapidly encrypting user files. Requires immediate host isolation."
   },
+
+  // Stage 6: Cloud Security Incidents
   {
-    id: 'ALT-3002',
-    title: 'Malware: Known Trojan Hash Detected',
-    type: 'malware',
-    severity: 'medium',
-    timestamp: '2026-09-03 11:35:40 UTC',
-    sourceIp: '192.168.1.201',
-    username: 'k.miller',
-    correctAction: 'remediate',
-    logs: {
-      Filename: "Free_PDF_Converter.exe",
-      SHA256: "2b992f232490d1f11c52b2f8a4f107f0c39a3f292211f32a512d7c5a08901b0f",
-      VirusTotalHits: "54/72 Engines (Trojan.Win32.Agent)",
-      ExecutionState: "Quarantined by AV",
-      NetworkConnections: "None"
-    },
-    explanation: "Medium Risk: Known malware hash blocked and quarantined by host endpoint protection before network callback occurred. Host cleanup and audit recommended."
-  },
-  {
-    id: 'ALT-3003',
-    title: 'Malware: Unrecognized Binary Outbound Beaconing',
-    type: 'malware',
+    id: 'ALT-4001',
+    title: 'Cloud: Leaked AWS IAM Access Key Usage',
+    type: 'cloud',
     severity: 'high',
-    timestamp: '2026-09-03 11:40:02 UTC',
-    sourceIp: '10.0.5.12',
-    username: 'b.taylor',
+    timestamp: '2026-09-03 11:45:10 UTC',
+    sourceIp: '198.51.100.42',
+    username: 'aws_admin_key_AKIAIOSFODNN7',
     correctAction: 'escalate',
     logs: {
-      Process: "update_checker.exe",
-      DestinationIP: "185.220.101.5",
-      DestinationPort: 443,
-      BytesSent: "45.2 MB",
-      BytesReceived: "1.2 MB",
-      BeaconInterval: "60 seconds (Strict Jitter: 2%)"
+      EventSource: "cloudtrail.amazonaws.com",
+      EventName: "CreateUser",
+      UserAgent: "aws-cli/2.11.0 Python/3.11.2 Linux/5.15",
+      AccessKeyId: "AKIAIOSFODNN7EXAMPLE",
+      SourceLocation: "Frankfurt, DE (Unrecognized Location)",
+      PolicyModified: "AdministratorAccess attached to new backdoor account"
     },
-    explanation: "High Risk: Consistent traffic intervals (beaconing) paired with high outbound data transfer indicate an active Command & Control (C2) channel and potential data exfiltration."
+    explanation: "High Risk: A leaked AWS access key was used from an unusual international location to create a new admin user account. Revoke key immediately."
+  },
+  {
+    id: 'ALT-4002',
+    title: 'Cloud: S3 Storage Bucket Made Publicly Accessible',
+    type: 'cloud',
+    severity: 'medium',
+    timestamp: '2026-09-03 11:50:30 UTC',
+    sourceIp: '10.0.1.50',
+    username: 'd.chen (DevOps)',
+    correctAction: 'remediate',
+    logs: {
+      EventSource: "s3.amazonaws.com",
+      EventName: "PutBucketAcl",
+      BucketName: "company-customer-backups-prod",
+      CannedACL: "public-read",
+      BlockPublicAccessStatus: "DISABLED"
+    },
+    explanation: "Medium Risk: A sensitive production backup bucket was reconfigured to allow public reads. Re-enable Public Access Block and restore private ACLs."
+  },
+  {
+    id: 'ALT-4003',
+    title: 'Cloud: Entra ID Impossible Travel Anomaly',
+    type: 'cloud',
+    severity: 'high',
+    timestamp: '2026-09-03 11:55:00 UTC',
+    sourceIp: '185.220.101.9',
+    username: 's.jenkins@company.com',
+    correctAction: 'escalate',
+    logs: {
+      IdentityProvider: "Microsoft Entra ID",
+      Login1: "11:40 UTC — New York, US (IP: 72.14.201.2)",
+      Login2: "11:55 UTC — Bucharest, RO (IP: 185.220.101.9)",
+      TimeDifference: "15 minutes",
+      MFA_Status: "Prompted (Session Hijacked via AitM)"
+    },
+    explanation: "High Risk: Logins registered from two geographically distant countries within 15 minutes indicate adversary-in-the-middle session hijacking. Revoke tokens and enforce password reset."
   }
 ];
 
@@ -134,9 +153,9 @@ function selectAlert(alert, cardEl) {
     <h3>${alert.title} (${alert.id})</h3>
     <p><strong>Timestamp:</strong> ${alert.timestamp}</p>
     <p><strong>Category:</strong> <code>${alert.type.toUpperCase()}</code></p>
-    <p><strong>Target User:</strong> <code>${alert.username}</code></p>
+    <p><strong>Target/User:</strong> <code>${alert.username}</code></p>
     <p><strong>Source IP:</strong> <code>${alert.sourceIp}</code></p>
-    <h4>Raw Incident Logs & Indicators</h4>
+    <h4>Raw Cloud Trail / Audit Logs</h4>
     <div class="log-box">${JSON.stringify(alert.logs, null, 2)}</div>
   `;
 
