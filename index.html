@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SOC Analyst Simulator</title>
+  <title>SOC Analyst Simulator — Triage Console</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,13 +16,13 @@
   </header>
 
   <main class="dashboard">
-    <!-- Alert Queue -->
+    <!-- Alert Queue Panel -->
     <section class="panel queue-panel">
       <h2>Incoming Alerts</h2>
       <div id="alert-list"></div>
     </section>
 
-    <!-- Incident Detail & Log Viewer -->
+    <!-- Incident Detail & Log Viewer Panel -->
     <section class="panel detail-panel">
       <h2>Alert Investigation</h2>
       <div id="alert-detail">
@@ -35,7 +35,7 @@
       <h2>Triage Decision</h2>
       <div id="action-buttons">
         <button class="btn btn-dismiss" onclick="makeDecision('dismiss')">Dismiss (False Positive)</button>
-        <button class="btn btn-remediate" onclick="makeDecision('remediate')">Remediate (Low Risk)</button>
+        <button class="btn btn-remediate" onclick="makeDecision('remediate')">Remediate (Low/Medium Risk)</button>
         <button class="btn btn-escalate" onclick="makeDecision('escalate')">Escalate Incident (High Risk)</button>
       </div>
       <div id="feedback" class="feedback-box"></div>
