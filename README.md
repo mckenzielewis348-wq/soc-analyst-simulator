@@ -41,7 +41,7 @@ An interactive, browser-based Security Operations Center (SOC) triage simulator 
 
 ## 📂 Project Structure
 
-```text
+
 soc-analyst-simulator/
 │
 ├── index.html     # Dashboard layout, metric counters, and triage panels
